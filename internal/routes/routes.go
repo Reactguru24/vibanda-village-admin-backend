@@ -1,10 +1,10 @@
 package routes
 
 import (
-	"vibanda-village-backend/internal/config"
-	"vibanda-village-backend/internal/handlers"
-	"vibanda-village-backend/internal/middleware"
-	"vibanda-village-backend/internal/models"
+	"vibanda-village-admin-backend/internal/config"
+	"vibanda-village-admin-backend/internal/handlers"
+	"vibanda-village-admin-backend/internal/middleware"
+	"vibanda-village-admin-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"

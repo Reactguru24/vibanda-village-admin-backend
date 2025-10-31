@@ -3,9 +3,9 @@ package middleware
 import (
 	"net/http"
 	"strings"
-	"vibanda-village-backend/internal/config"
-	"vibanda-village-backend/internal/models"
-	"vibanda-village-backend/pkg/utils"
+	"vibanda-village-admin-backend/internal/config"
+	"vibanda-village-admin-backend/internal/models"
+	"vibanda-village-admin-backend/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )

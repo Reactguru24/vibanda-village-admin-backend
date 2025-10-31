@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 	"time"
-	"vibanda-village-backend/internal/database"
-	"vibanda-village-backend/internal/models"
+	"vibanda-village-admin-backend/internal/database"
+	"vibanda-village-admin-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"

@@ -1,4 +1,4 @@
-module vibanda-village-backend
+module vibanda-village-admin-backend
 
 go 1.21
 
