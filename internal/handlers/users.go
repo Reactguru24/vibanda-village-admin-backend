@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 	"time"
-	"vibanda-village-backend/internal/database"
-	"vibanda-village-backend/internal/models"
-	"vibanda-village-backend/pkg/utils"
+	"vibanda-village-admin-backend/internal/database"
+	"vibanda-village-admin-backend/internal/models"
+	"vibanda-village-admin-backend/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -180,14 +180,14 @@ func CreateUser(c *gin.Context) {
 	// Create user
 	now := time.Now()
 	user := models.User{
-		ID:       primitive.NewObjectID(),
-		Name:     req.Name,
-		Email:    req.Email,
-		Username: req.Username,
-		Password: hashedPassword,
-		Phone:    req.Phone,
-		Role:     req.Role,
-		Status:   models.StatusActive,
+		ID:        primitive.NewObjectID(),
+		Name:      req.Name,
+		Email:     req.Email,
+		Username:  req.Username,
+		Password:  hashedPassword,
+		Phone:     req.Phone,
+		Role:      req.Role,
+		Status:    models.StatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

@@ -2,15 +2,15 @@ package utils
 
 import (
 	"time"
-	"vibanda-village-backend/internal/models"
+	"vibanda-village-admin-backend/internal/models"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type Claims struct {
-	UserID   string        `json:"user_id"`
-	Username string        `json:"username"`
-	Email    string        `json:"email"`
+	UserID   string          `json:"user_id"`
+	Username string          `json:"username"`
+	Email    string          `json:"email"`
 	Role     models.UserRole `json:"role"`
 	jwt.RegisteredClaims
 }
@@ -28,7 +28,7 @@ func GenerateToken(user *models.User, secret string, expirationHours int) (strin
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "vibanda-village-backend",
+			Issuer:    "vibanda-village-admin-backend",
 			Subject:   user.ID.Hex(),
 		},
 	}

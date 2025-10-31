@@ -2,11 +2,11 @@ package main
 
 import (
 	"log"
-	"vibanda-village-backend/internal/config"
-	"vibanda-village-backend/internal/database"
-	"vibanda-village-backend/internal/routes"
+	"vibanda-village-admin-backend/internal/config"
+	"vibanda-village-admin-backend/internal/database"
+	"vibanda-village-admin-backend/internal/routes"
 
-	_ "vibanda-village-backend/docs" // Import generated docs
+	_ "vibanda-village-admin-backend/docs" // Import generated docs
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"

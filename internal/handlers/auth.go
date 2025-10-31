@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
-	"vibanda-village-backend/internal/config"
-	"vibanda-village-backend/internal/database"
-	"vibanda-village-backend/internal/models"
-	"vibanda-village-backend/pkg/utils"
+	"vibanda-village-admin-backend/internal/config"
+	"vibanda-village-admin-backend/internal/database"
+	"vibanda-village-admin-backend/internal/models"
+	"vibanda-village-admin-backend/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -35,9 +36,11 @@ type LoginResponse struct {
 func Register(c *gin.Context) {
 	var req models.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request format. Please check your input data and try again."})
 		return
 	}
+
+	fmt.Printf("Register payload: %+v\n", req)
 
 	// Check if user already exists
 	collection := database.DB.Collection("users")
@@ -52,14 +55,14 @@ func Register(c *gin.Context) {
 	}).Decode(&existingUser)
 
 	if err == nil {
-		c.JSON(http.StatusConflict, ErrorResponse{Error: "User with this email or username already exists"})
+		c.JSON(http.StatusConflict, ErrorResponse{Error: "An account with this email or username already exists. Please use a different email or try logging in if you already have an account."})
 		return
 	}
 
 	// Hash password
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to hash password"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "An error occurred while processing your request. Please try again later."})
 		return
 	}
 
@@ -80,7 +83,7 @@ func Register(c *gin.Context) {
 
 	_, err = collection.InsertOne(ctx, user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to create user"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "An error occurred while creating your account. Please try again later."})
 		return
 	}
 
@@ -102,9 +105,11 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request format. Please check your input data and try again."})
 		return
 	}
+
+	fmt.Printf("Login payload: %+v\n", req)
 
 	// Find user by email
 	collection := database.DB.Collection("users")
@@ -113,19 +118,19 @@ func Login(c *gin.Context) {
 	var user models.User
 	err := collection.FindOne(ctx, bson.M{"email": req.Email}).Decode(&user)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "The email or password you entered is incorrect. Please check your credentials and try again."})
 		return
 	}
 
 	// Check password
 	if !utils.CheckPassword(req.Password, user.Password) {
-		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "The email or password you entered is incorrect. Please check your credentials and try again."})
 		return
 	}
 
 	// Check if user is active
 	if user.Status != models.StatusActive {
-		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Account is not active"})
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Your account is currently inactive. Please contact support for assistance."})
 		return
 	}
 
@@ -144,7 +149,7 @@ func Login(c *gin.Context) {
 	cfg := config.Load()
 	token, err := utils.GenerateToken(&user, cfg.JWTSecret, cfg.JWTExpirationHours)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to generate token"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "An error occurred while logging you in. Please try again later."})
 		return
 	}
 
@@ -183,7 +188,7 @@ func GetProfile(c *gin.Context) {
 	var user models.User
 	err = collection.FindOne(ctx, bson.M{"_id": userObjectID}).Decode(&user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to get user profile"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "An error occurred while retrieving your profile. Please try again later."})
 		return
 	}
 
