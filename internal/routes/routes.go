@@ -62,6 +62,13 @@ func SetupRoutes(r *gin.Engine) {
 			products.DELETE("/:id", handlers.DeleteProduct)
 		}
 
+		// Upload routes (admin and manager)
+		uploads := protected.Group("/uploads")
+		uploads.Use(middleware.RoleMiddleware(models.RoleAdmin, models.RoleManager))
+		{
+			uploads.POST("/image", handlers.UploadImage)
+		}
+
 		// Order routes (admin and manager)
 		orders := protected.Group("/orders")
 		orders.Use(middleware.RoleMiddleware(models.RoleAdmin, models.RoleManager))

@@ -150,17 +150,22 @@ func CreateEvent(c *gin.Context) {
 
 	now := time.Now()
 	event := models.Event{
-		ID:          primitive.NewObjectID(),
-		Title:       req.Title,
-		Description: req.Description,
-		Date:        req.Date,
-		Location:    req.Location,
-		Capacity:    req.Capacity,
-		Featured:    req.Featured,
-		Published:   req.Published,
-		ImageURL:    req.ImageURL,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		ID:               primitive.NewObjectID(),
+		Title:            req.Title,
+		Description:      req.Description,
+		Date:             req.Date,
+		Time:             req.Time,
+		Location:         req.Location,
+		Capacity:         req.Capacity,
+		Price:            req.Price,
+		Category:         req.Category,
+		Organizer:        req.Organizer,
+		TicketsAvailable: req.TicketsAvailable,
+		Featured:         req.Featured,
+		Published:        req.Published,
+		ImageURL:         req.ImageURL,
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}
 
 	_, err := collection.InsertOne(ctx, event)
@@ -220,14 +225,29 @@ func UpdateEvent(c *gin.Context) {
 	if req.Date != "" {
 		event.Date = req.Date
 	}
+	if req.Time != "" {
+		event.Time = req.Time
+	}
 	if req.Location != "" {
 		event.Location = req.Location
 	}
-	if req.Capacity > 0 {
+	if req.Capacity != 0 {
 		event.Capacity = req.Capacity
+	}
+	if req.Price != 0 {
+		event.Price = req.Price
+	}
+	if req.Category != "" {
+		event.Category = req.Category
+	}
+	if req.Organizer != "" {
+		event.Organizer = req.Organizer
 	}
 	if req.ImageURL != "" {
 		event.ImageURL = req.ImageURL
+	}
+	if req.TicketsAvailable != nil {
+		event.TicketsAvailable = *req.TicketsAvailable
 	}
 	if req.Featured != nil {
 		event.Featured = *req.Featured
@@ -239,15 +259,20 @@ func UpdateEvent(c *gin.Context) {
 	event.UpdatedAt = time.Now()
 
 	update := bson.M{"$set": bson.M{
-		"title":       event.Title,
-		"description": event.Description,
-		"date":        event.Date,
-		"location":    event.Location,
-		"capacity":    event.Capacity,
-		"image_url":   event.ImageURL,
-		"featured":    event.Featured,
-		"published":   event.Published,
-		"updated_at":  event.UpdatedAt,
+		"title":             event.Title,
+		"description":       event.Description,
+		"date":              event.Date,
+		"time":              event.Time,
+		"location":          event.Location,
+		"capacity":          event.Capacity,
+		"price":             event.Price,
+		"category":          event.Category,
+		"organizer":         event.Organizer,
+		"tickets_available": event.TicketsAvailable,
+		"image_url":         event.ImageURL,
+		"featured":          event.Featured,
+		"published":         event.Published,
+		"updated_at":        event.UpdatedAt,
 	}}
 
 	_, err = collection.UpdateOne(ctx, bson.M{"_id": eventObjectID}, update)

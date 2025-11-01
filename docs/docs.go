@@ -83,7 +83,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get current user profile information",
+                "description": "Get current user profile information with role-based data",
                 "consumes": [
                     "application/json"
                 ],
@@ -98,7 +98,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.UserResponse"
+                            "$ref": "#/definitions/models.ProfileResponse"
                         }
                     },
                     "401": {
@@ -1316,6 +1316,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/uploads/image": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload an image file for products",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "uploads"
+                ],
+                "summary": "Upload product image",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Image file to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "security": [
@@ -1395,7 +1447,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new user account",
+                "description": "Create a new user account (Admin can create managers and staff, Manager can create staff only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1426,6 +1478,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -1505,7 +1563,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update an existing user",
+                "description": "Update an existing user (Admin can update all, Manager can update staff only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1547,6 +1605,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -1567,7 +1631,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Delete a user account",
+                "description": "Delete a user account (Admin cannot delete other admins or managers)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1593,6 +1657,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -1665,6 +1735,9 @@ const docTemplate = `{
                     "type": "integer",
                     "minimum": 1
                 },
+                "category": {
+                    "type": "string"
+                },
                 "date": {
                     "type": "string"
                 },
@@ -1682,8 +1755,20 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 200
                 },
+                "organizer": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
                 "published": {
                     "type": "boolean"
+                },
+                "tickets_available": {
+                    "type": "boolean"
+                },
+                "time": {
+                    "type": "string"
                 },
                 "title": {
                     "type": "string",
@@ -1864,6 +1949,9 @@ const docTemplate = `{
                 "capacity": {
                     "type": "integer"
                 },
+                "category": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -1885,8 +1973,20 @@ const docTemplate = `{
                 "location": {
                     "type": "string"
                 },
+                "organizer": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
                 "published": {
                     "type": "boolean"
+                },
+                "tickets_available": {
+                    "type": "boolean"
+                },
+                "time": {
+                    "type": "string"
                 },
                 "title": {
                     "type": "string"
@@ -2112,6 +2212,107 @@ const docTemplate = `{
                 "SubcategoryOther"
             ]
         },
+        "models.ProfileActivity": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ProfilePermissions": {
+            "type": "object",
+            "properties": {
+                "access_permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "can_manage_roles": {
+                    "type": "boolean"
+                },
+                "can_manage_system": {
+                    "type": "boolean"
+                },
+                "can_manage_users": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.ProfileResponse": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Basic user info",
+                    "type": "string"
+                },
+                "join_date": {
+                    "description": "Profile-specific data",
+                    "type": "string"
+                },
+                "last_login": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "$ref": "#/definitions/models.ProfilePermissions"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "profile_image": {
+                    "type": "string"
+                },
+                "recent_activities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ProfileActivity"
+                    }
+                },
+                "role": {
+                    "$ref": "#/definitions/models.UserRole"
+                },
+                "role_display": {
+                    "type": "string"
+                },
+                "social_links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/models.UserStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "models.RegisterRequest": {
             "type": "object",
             "required": [
@@ -2122,6 +2323,9 @@ const docTemplate = `{
                 "username"
             ],
             "properties": {
+                "department": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -2220,6 +2424,9 @@ const docTemplate = `{
                     "type": "integer",
                     "minimum": 1
                 },
+                "category": {
+                    "type": "string"
+                },
                 "date": {
                     "type": "string"
                 },
@@ -2237,8 +2444,20 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 200
                 },
+                "organizer": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
                 "published": {
                     "type": "boolean"
+                },
+                "tickets_available": {
+                    "type": "boolean"
+                },
+                "time": {
+                    "type": "string"
                 },
                 "title": {
                     "type": "string",
@@ -2384,6 +2603,12 @@ const docTemplate = `{
         "models.UpdateUserRequest": {
             "type": "object",
             "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -2393,6 +2618,9 @@ const docTemplate = `{
                     "minLength": 2
                 },
                 "phone": {
+                    "type": "string"
+                },
+                "profile_image": {
                     "type": "string"
                 },
                 "role": {
@@ -2406,6 +2634,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.UserRole"
                         }
                     ]
+                },
+                "social_links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "status": {
                     "enum": [
@@ -2428,7 +2662,13 @@ const docTemplate = `{
         "models.UserResponse": {
             "type": "object",
             "properties": {
+                "bio": {
+                    "type": "string"
+                },
                 "created_at": {
+                    "type": "string"
+                },
+                "department": {
                     "type": "string"
                 },
                 "email": {
@@ -2446,8 +2686,17 @@ const docTemplate = `{
                 "phone": {
                     "type": "string"
                 },
+                "profile_image": {
+                    "type": "string"
+                },
                 "role": {
                     "$ref": "#/definitions/models.UserRole"
+                },
+                "social_links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "status": {
                     "$ref": "#/definitions/models.UserStatus"

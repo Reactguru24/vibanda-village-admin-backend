@@ -27,7 +27,7 @@ func Load() *Config {
 		DatabaseName:    getEnv("DATABASE_NAME", "vibanda_village"),
 		JWTSecret:       getEnv("JWT_SECRET", "your-super-secret-jwt-key-here"),
 		JWTExpirationHours: getEnvAsInt("JWT_EXPIRATION_HOURS", 24),
-		AllowedOrigins:  getEnvAsSlice("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"}),
+		AllowedOrigins:  getEnvAsSlice("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173", "http://localhost:5174"}),
 		MaxFileSize:     getEnv("MAX_FILE_SIZE", "10MB"),
 		UploadPath:      getEnv("UPLOAD_PATH", "uploads/"),
 	}

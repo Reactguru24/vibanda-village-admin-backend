@@ -163,12 +163,12 @@ func Login(c *gin.Context) {
 
 // GetProfile godoc
 // @Summary Get user profile
-// @Description Get current user profile information
+// @Description Get current user profile information with role-based data
 // @Tags auth
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} models.UserResponse
+// @Success 200 {object} models.ProfileResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /auth/profile [get]
@@ -192,5 +192,127 @@ func GetProfile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user.ToResponse())
+	// Build role-based permissions
+	permissions := getRolePermissions(user.Role)
+
+	// Build role display name
+	roleDisplay := getRoleDisplay(user.Role)
+
+	// Build recent activities (mock data for now - in real app, this would come from activity logs)
+	recentActivities := []models.ProfileActivity{
+		{
+			ID:          "1",
+			Description: "Logged into admin dashboard",
+			Timestamp:   time.Now().Add(-time.Hour * 2),
+		},
+		{
+			ID:          "2",
+			Description: "Updated profile information",
+			Timestamp:   time.Now().Add(-time.Hour * 24),
+		},
+		{
+			ID:          "3",
+			Description: "Created new user account",
+			Timestamp:   time.Now().Add(-time.Hour * 48),
+		},
+	}
+
+	// Create comprehensive profile response
+	profileResponse := models.ProfileResponse{
+		ID:               user.ID.Hex(),
+		Name:             user.Name,
+		Email:            user.Email,
+		Username:         user.Username,
+		Role:             user.Role,
+		Status:           user.Status,
+		Phone:            user.Phone,
+		Department:       user.Department,
+		Bio:              user.Bio,
+		ProfileImage:     user.ProfileImage,
+		SocialLinks:      user.SocialLinks,
+		LastLogin:        user.LastLogin,
+		CreatedAt:        user.CreatedAt,
+		UpdatedAt:        user.UpdatedAt,
+		JoinDate:         user.CreatedAt.Format("2006-01-02"),
+		RoleDisplay:      roleDisplay,
+		Permissions:      permissions,
+		RecentActivities: recentActivities,
+	}
+
+	c.JSON(http.StatusOK, profileResponse)
+}
+
+// Helper function to get role-based permissions
+func getRolePermissions(role models.UserRole) models.ProfilePermissions {
+	switch role {
+	case models.RoleAdmin:
+		return models.ProfilePermissions{
+			CanManageUsers:    true,
+			CanManageRoles:    true,
+			CanManageSystem:   true,
+			AccessPermissions: []string{
+				"Full system access",
+				"User management",
+				"Role assignment",
+				"System configuration",
+				"Financial reports",
+				"Inventory management",
+				"Order processing",
+				"Reservation management",
+				"Event management",
+				"Customer data access",
+			},
+		}
+	case models.RoleManager:
+		return models.ProfilePermissions{
+			CanManageUsers:    true,
+			CanManageRoles:    false,
+			CanManageSystem:   false,
+			AccessPermissions: []string{
+				"Dashboard access",
+				"Team management",
+				"Order processing",
+				"Reservation management",
+				"Event management",
+				"Inventory oversight",
+				"Staff scheduling",
+				"Basic reporting",
+			},
+		}
+	case models.RoleStaff:
+		return models.ProfilePermissions{
+			CanManageUsers:    false,
+			CanManageRoles:    false,
+			CanManageSystem:   false,
+			AccessPermissions: []string{
+				"Dashboard access",
+				"Order processing",
+				"Reservation management",
+				"Event assistance",
+				"Inventory updates",
+				"Customer service",
+			},
+		}
+	default:
+		return models.ProfilePermissions{
+			CanManageUsers:    false,
+			CanManageRoles:    false,
+			CanManageSystem:   false,
+			AccessPermissions: []string{},
+		}
+	}
+}
+
+// Helper function to get role display name
+func getRoleDisplay(role models.UserRole) string {
+	switch role {
+	case models.RoleAdmin:
+		return "System Administrator"
+	case models.RoleManager:
+		return "Management Team"
+	case models.RoleStaff:
+		return "Staff Member"
+	default:
+		return string(role)
+	}
 }

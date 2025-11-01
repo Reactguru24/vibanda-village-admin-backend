@@ -135,7 +135,7 @@ func GetUser(c *gin.Context) {
 
 // CreateUser godoc
 // @Summary Create a new user
-// @Description Create a new user account
+// @Description Create a new user account (Admin can create managers and staff, Manager can create staff only)
 // @Tags users
 // @Accept json
 // @Produce json
@@ -143,6 +143,7 @@ func GetUser(c *gin.Context) {
 // @Param request body models.RegisterRequest true "User data"
 // @Success 201 {object} models.UserResponse
 // @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
 // @Failure 409 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /users [post]
@@ -153,12 +154,51 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	// Check if user already exists
+	// Get current user from context (set by auth middleware)
+	currentUserID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
 	collection := database.DB.Collection("users")
 	ctx := context.Background()
 
+	currentUserObjectID, err := primitive.ObjectIDFromHex(currentUserID.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid current user ID"})
+		return
+	}
+
+	var currentUser models.User
+	err = collection.FindOne(ctx, bson.M{"_id": currentUserObjectID}).Decode(&currentUser)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to get current user"})
+		return
+	}
+
+	// Permission checks
+	if currentUser.Role == models.RoleAdmin {
+		// Admin can create managers and staff, but not other admins
+		if req.Role == models.RoleAdmin {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Admin cannot create other admins"})
+			return
+		}
+	} else if currentUser.Role == models.RoleManager {
+		// Manager can only create staff
+		if req.Role != models.RoleStaff {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Manager can only create staff accounts"})
+			return
+		}
+	} else {
+		// Staff cannot create users
+		c.JSON(http.StatusForbidden, ErrorResponse{Error: "Staff cannot create user accounts"})
+		return
+	}
+
+	// Check if user already exists
 	var existingUser models.User
-	err := collection.FindOne(ctx, bson.M{
+	err = collection.FindOne(ctx, bson.M{
 		"$or": []bson.M{
 			{"email": req.Email},
 			{"username": req.Username},
@@ -180,16 +220,18 @@ func CreateUser(c *gin.Context) {
 	// Create user
 	now := time.Now()
 	user := models.User{
-		ID:        primitive.NewObjectID(),
-		Name:      req.Name,
-		Email:     req.Email,
-		Username:  req.Username,
-		Password:  hashedPassword,
-		Phone:     req.Phone,
-		Role:      req.Role,
-		Status:    models.StatusActive,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:          primitive.NewObjectID(),
+		Name:        req.Name,
+		Email:       req.Email,
+		Username:    req.Username,
+		Password:    hashedPassword,
+		Phone:       req.Phone,
+		Department:  req.Department,
+		Bio:         req.Bio,
+		Role:        req.Role,
+		Status:      models.StatusActive,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
 	_, err = collection.InsertOne(ctx, user)
@@ -203,7 +245,7 @@ func CreateUser(c *gin.Context) {
 
 // UpdateUser godoc
 // @Summary Update user
-// @Description Update an existing user
+// @Description Update an existing user (Admin can update all, Manager can update staff only)
 // @Tags users
 // @Accept json
 // @Produce json
@@ -212,6 +254,7 @@ func CreateUser(c *gin.Context) {
 // @Param request body models.UpdateUserRequest true "User update data"
 // @Success 200 {object} models.UserResponse
 // @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /users/{id} [put]
@@ -229,13 +272,57 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
+	// Get current user from context (set by auth middleware)
+	currentUserID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
 	collection := database.DB.Collection("users")
 	ctx := context.Background()
+
+	currentUserObjectID, err := primitive.ObjectIDFromHex(currentUserID.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid current user ID"})
+		return
+	}
+
+	var currentUser models.User
+	err = collection.FindOne(ctx, bson.M{"_id": currentUserObjectID}).Decode(&currentUser)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to get current user"})
+		return
+	}
 
 	var user models.User
 	err = collection.FindOne(ctx, bson.M{"_id": userObjectID}).Decode(&user)
 	if err != nil {
 		c.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
+		return
+	}
+
+	// Permission checks
+	if currentUser.Role == models.RoleAdmin {
+		// Admin can update all users except changing other admins' roles
+		if req.Role != "" && user.Role == models.RoleAdmin && req.Role != models.RoleAdmin {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Admin cannot change other admins' roles"})
+			return
+		}
+	} else if currentUser.Role == models.RoleManager {
+		// Manager can only update staff members
+		if user.Role != models.RoleStaff {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Manager can only update staff accounts"})
+			return
+		}
+		// Manager cannot change roles
+		if req.Role != "" {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Manager cannot change user roles"})
+			return
+		}
+	} else {
+		// Staff cannot update users
+		c.JSON(http.StatusForbidden, ErrorResponse{Error: "Staff cannot update user accounts"})
 		return
 	}
 
@@ -267,6 +354,18 @@ func UpdateUser(c *gin.Context) {
 	if req.Phone != "" {
 		user.Phone = req.Phone
 	}
+	if req.Department != "" {
+		user.Department = req.Department
+	}
+	if req.Bio != "" {
+		user.Bio = req.Bio
+	}
+	if req.ProfileImage != "" {
+		user.ProfileImage = req.ProfileImage
+	}
+	if req.SocialLinks != nil {
+		user.SocialLinks = req.SocialLinks
+	}
 	if req.Role != "" {
 		user.Role = req.Role
 	}
@@ -277,13 +376,17 @@ func UpdateUser(c *gin.Context) {
 	user.UpdatedAt = time.Now()
 
 	update := bson.M{"$set": bson.M{
-		"name":       user.Name,
-		"email":      user.Email,
-		"username":   user.Username,
-		"phone":      user.Phone,
-		"role":       user.Role,
-		"status":     user.Status,
-		"updated_at": user.UpdatedAt,
+		"name":         user.Name,
+		"email":        user.Email,
+		"username":     user.Username,
+		"phone":        user.Phone,
+		"department":   user.Department,
+		"bio":          user.Bio,
+		"profile_image": user.ProfileImage,
+		"social_links": user.SocialLinks,
+		"role":         user.Role,
+		"status":       user.Status,
+		"updated_at":   user.UpdatedAt,
 	}}
 
 	_, err = collection.UpdateOne(ctx, bson.M{"_id": userObjectID}, update)
@@ -297,7 +400,7 @@ func UpdateUser(c *gin.Context) {
 
 // DeleteUser godoc
 // @Summary Delete user
-// @Description Delete a user account
+// @Description Delete a user account (Admin cannot delete other admins or managers)
 // @Tags users
 // @Accept json
 // @Produce json
@@ -305,6 +408,7 @@ func UpdateUser(c *gin.Context) {
 // @Param id path string true "User ID"
 // @Success 204 {object} nil
 // @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /users/{id} [delete]
@@ -323,6 +427,38 @@ func DeleteUser(c *gin.Context) {
 	err = collection.FindOne(ctx, bson.M{"_id": userObjectID}).Decode(&user)
 	if err != nil {
 		c.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
+		return
+	}
+
+	// Get current user from context (set by auth middleware)
+	currentUserID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	currentUserObjectID, err := primitive.ObjectIDFromHex(currentUserID.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid current user ID"})
+		return
+	}
+
+	var currentUser models.User
+	err = collection.FindOne(ctx, bson.M{"_id": currentUserObjectID}).Decode(&currentUser)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to get current user"})
+		return
+	}
+
+	// Admin cannot delete other admins or managers
+	if currentUser.Role == models.RoleAdmin && (user.Role == models.RoleAdmin || user.Role == models.RoleManager) {
+		c.JSON(http.StatusForbidden, ErrorResponse{Error: "Admin cannot delete other admins or managers"})
+		return
+	}
+
+	// Manager cannot delete admins
+	if currentUser.Role == models.RoleManager && user.Role == models.RoleAdmin {
+		c.JSON(http.StatusForbidden, ErrorResponse{Error: "Manager cannot delete admin"})
 		return
 	}
 

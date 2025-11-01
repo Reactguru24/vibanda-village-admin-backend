@@ -20,15 +20,21 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Check if the header starts with "Bearer "
-		tokenParts := strings.Split(authHeader, " ")
-		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
-			c.Abort()
-			return
-		}
+		var tokenString string
 
-		tokenString := tokenParts[1]
+		// Check if the header starts with "Bearer "
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			tokenParts := strings.Split(authHeader, " ")
+			if len(tokenParts) != 2 {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
+				c.Abort()
+				return
+			}
+			tokenString = tokenParts[1]
+		} else {
+			// Treat the entire header as the token
+			tokenString = authHeader
+		}
 		cfg := config.Load()
 
 		claims, err := utils.ValidateToken(tokenString, cfg.JWTSecret)

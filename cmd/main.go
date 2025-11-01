@@ -49,6 +49,9 @@ func main() {
 	// Create Gin router
 	r := gin.Default()
 
+	// Serve static files for uploads
+	r.Static("/uploads", cfg.UploadPath)
+
 	// Setup routes
 	routes.SetupRoutes(r)
 
