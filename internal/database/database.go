@@ -5,8 +5,12 @@ import (
 	"log"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"vibanda-village-admin-backend/internal/models"
+	"vibanda-village-admin-backend/pkg/utils"
 )
 
 var Client *mongo.Client
@@ -52,6 +56,9 @@ func InitDB(mongoURI, databaseName string) {
 	Client = client
 	DB = client.Database(databaseName)
 	log.Println("Database connection established")
+
+	// Create test user if it doesn't exist
+	createTestUserIfNotExists()
 }
 
 func GetClient() *mongo.Client {
@@ -69,4 +76,47 @@ func CloseDB() {
 	if err := Client.Disconnect(ctx); err != nil {
 		log.Println("Error closing database connection:", err)
 	}
+}
+
+func createTestUserIfNotExists() {
+	collection := DB.Collection("users")
+	ctx := context.Background()
+
+	// Check if user already exists
+	var existingUser models.User
+	err := collection.FindOne(ctx, bson.M{"email": "testandtest@gmail.com"}).Decode(&existingUser)
+	if err == nil {
+		log.Println("User already exists")
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := utils.HashPassword("12345678")
+	if err != nil {
+		log.Println("Failed to hash password:", err)
+		return
+	}
+
+	// Create user
+	now := time.Now()
+	user := models.User{
+		ID:        primitive.NewObjectID(),
+		Name:      "Test User",
+		Email:     "testandtest@gmail.com",
+		Username:  "testuser",
+		Password:  hashedPassword,
+		Phone:     "",
+		Role:      models.RoleAdmin,
+		Status:    models.StatusActive,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	_, err = collection.InsertOne(ctx, user)
+	if err != nil {
+		log.Println("Failed to create user:", err)
+		return
+	}
+
+	log.Println("Test user created successfully")
 }
