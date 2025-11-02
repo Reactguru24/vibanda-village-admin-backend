@@ -220,18 +220,18 @@ func CreateUser(c *gin.Context) {
 	// Create user
 	now := time.Now()
 	user := models.User{
-		ID:          primitive.NewObjectID(),
-		Name:        req.Name,
-		Email:       req.Email,
-		Username:    req.Username,
-		Password:    hashedPassword,
-		Phone:       req.Phone,
-		Department:  req.Department,
-		Bio:         req.Bio,
-		Role:        req.Role,
-		Status:      models.StatusActive,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		ID:         primitive.NewObjectID(),
+		Name:       req.Name,
+		Email:      req.Email,
+		Username:   req.Username,
+		Password:   hashedPassword,
+		Phone:      req.Phone,
+		Department: req.Department,
+		Bio:        req.Bio,
+		Role:       req.Role,
+		Status:     models.StatusActive,
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}
 
 	_, err = collection.InsertOne(ctx, user)
@@ -376,17 +376,17 @@ func UpdateUser(c *gin.Context) {
 	user.UpdatedAt = time.Now()
 
 	update := bson.M{"$set": bson.M{
-		"name":         user.Name,
-		"email":        user.Email,
-		"username":     user.Username,
-		"phone":        user.Phone,
-		"department":   user.Department,
-		"bio":          user.Bio,
+		"name":          user.Name,
+		"email":         user.Email,
+		"username":      user.Username,
+		"phone":         user.Phone,
+		"department":    user.Department,
+		"bio":           user.Bio,
 		"profile_image": user.ProfileImage,
-		"social_links": user.SocialLinks,
-		"role":         user.Role,
-		"status":       user.Status,
-		"updated_at":   user.UpdatedAt,
+		"social_links":  user.SocialLinks,
+		"role":          user.Role,
+		"status":        user.Status,
+		"updated_at":    user.UpdatedAt,
 	}}
 
 	_, err = collection.UpdateOne(ctx, bson.M{"_id": userObjectID}, update)

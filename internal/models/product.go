@@ -33,19 +33,19 @@ const (
 
 // Product represents a product in the system
 type Product struct {
-	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty" gorm:"type:objectid;primaryKey;autoIncrement:false"`
-	Name         string             `json:"name" bson:"name" gorm:"not null" validate:"required,min=2,max=100"`
-	Category     ProductCategory    `json:"category" bson:"category" gorm:"not null" validate:"required,oneof=food drink"`
-	Subcategory  ProductSubcategory `json:"subcategory" bson:"subcategory" gorm:"not null" validate:"required"`
-	Price        float64            `json:"price" bson:"price" gorm:"not null" validate:"required,min=0"`
-	Stock        int                `json:"stock" bson:"stock" gorm:"not null;default:0" validate:"min=0"`
-	Description  string             `json:"description,omitempty" bson:"description,omitempty" validate:"max=500"`
-	ImageURL     string             `json:"image_url,omitempty" bson:"image_url,omitempty"`
-	Popular      bool               `json:"popular" bson:"popular" gorm:"default:false"`
-	New          bool               `json:"new" bson:"new" gorm:"default:false"`
-	Available    bool               `json:"available" bson:"available" gorm:"default:true"`
-	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty" gorm:"type:objectid;primaryKey;autoIncrement:false"`
+	Name        string             `json:"name" bson:"name" gorm:"not null" validate:"required,min=2,max=100"`
+	Category    ProductCategory    `json:"category" bson:"category" gorm:"not null" validate:"required,oneof=food drink"`
+	Subcategory ProductSubcategory `json:"subcategory" bson:"subcategory" gorm:"not null" validate:"required"`
+	Price       float64            `json:"price" bson:"price" gorm:"not null" validate:"required,min=0"`
+	Stock       int                `json:"stock" bson:"stock" gorm:"not null;default:0" validate:"min=0"`
+	Description string             `json:"description,omitempty" bson:"description,omitempty" validate:"max=500"`
+	ImageURL    string             `json:"image_url,omitempty" bson:"image_url,omitempty"`
+	Popular     bool               `json:"popular" bson:"popular" gorm:"default:false"`
+	New         bool               `json:"new" bson:"new" gorm:"default:false"`
+	Available   bool               `json:"available" bson:"available" gorm:"default:true"`
+	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 // BeforeCreate hook to set ID and timestamps

@@ -247,9 +247,9 @@ func getRolePermissions(role models.UserRole) models.ProfilePermissions {
 	switch role {
 	case models.RoleAdmin:
 		return models.ProfilePermissions{
-			CanManageUsers:    true,
-			CanManageRoles:    true,
-			CanManageSystem:   true,
+			CanManageUsers:  true,
+			CanManageRoles:  true,
+			CanManageSystem: true,
 			AccessPermissions: []string{
 				"Full system access",
 				"User management",
@@ -265,9 +265,9 @@ func getRolePermissions(role models.UserRole) models.ProfilePermissions {
 		}
 	case models.RoleManager:
 		return models.ProfilePermissions{
-			CanManageUsers:    true,
-			CanManageRoles:    false,
-			CanManageSystem:   false,
+			CanManageUsers:  true,
+			CanManageRoles:  false,
+			CanManageSystem: false,
 			AccessPermissions: []string{
 				"Dashboard access",
 				"Team management",
@@ -281,9 +281,9 @@ func getRolePermissions(role models.UserRole) models.ProfilePermissions {
 		}
 	case models.RoleStaff:
 		return models.ProfilePermissions{
-			CanManageUsers:    false,
-			CanManageRoles:    false,
-			CanManageSystem:   false,
+			CanManageUsers:  false,
+			CanManageRoles:  false,
+			CanManageSystem: false,
 			AccessPermissions: []string{
 				"Dashboard access",
 				"Order processing",

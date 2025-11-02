@@ -2,17 +2,23 @@ package main
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"time"
 	"vibanda-village-admin-backend/internal/config"
 	"vibanda-village-admin-backend/internal/database"
 	"vibanda-village-admin-backend/internal/models"
 	"vibanda-village-admin-backend/pkg/utils"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using system environment variables")
+	}
 	cfg := config.Load()
 	database.InitDB(cfg.MongoURI, cfg.DatabaseName)
 

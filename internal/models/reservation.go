@@ -10,9 +10,9 @@ import (
 type ReservationStatus string
 
 const (
-	ReservationStatusPending    ReservationStatus = "pending"
-	ReservationStatusConfirmed  ReservationStatus = "confirmed"
-	ReservationStatusCancelled  ReservationStatus = "cancelled"
+	ReservationStatusPending   ReservationStatus = "pending"
+	ReservationStatusConfirmed ReservationStatus = "confirmed"
+	ReservationStatusCancelled ReservationStatus = "cancelled"
 )
 
 // Reservation represents a reservation in the system
@@ -92,7 +92,7 @@ func (r *Reservation) ToResponse() ReservationResponse {
 
 // CreateReservationRequest represents reservation creation request payload
 type CreateReservationRequest struct {
-	UserID          string `json:"user_id,omitempty"`
+	UserID          string            `json:"user_id,omitempty"`
 	CustomerName    string            `json:"customer_name" validate:"required,min=2,max=100"`
 	CustomerPhone   string            `json:"customer_phone" validate:"required"`
 	CustomerEmail   string            `json:"customer_email" validate:"required,email"`

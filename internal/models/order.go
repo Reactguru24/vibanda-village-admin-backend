@@ -10,10 +10,10 @@ import (
 type OrderStatus string
 
 const (
-	OrderStatusPending    OrderStatus = "pending"
-	OrderStatusConfirmed  OrderStatus = "confirmed"
-	OrderStatusDelivered  OrderStatus = "delivered"
-	OrderStatusCancelled  OrderStatus = "cancelled"
+	OrderStatusPending   OrderStatus = "pending"
+	OrderStatusConfirmed OrderStatus = "confirmed"
+	OrderStatusDelivered OrderStatus = "delivered"
+	OrderStatusCancelled OrderStatus = "cancelled"
 )
 
 type PaymentStatus string
@@ -116,13 +116,13 @@ func (o *Order) ToResponse() OrderResponse {
 
 // CreateOrderRequest represents order creation request payload
 type CreateOrderRequest struct {
-	UserID         string      `json:"user_id,omitempty"`
-	CustomerName   string      `json:"customer_name" validate:"required,min=2,max=100"`
-	CustomerPhone  string      `json:"customer_phone" validate:"required"`
-	CustomerEmail  string      `json:"customer_email,omitempty" validate:"omitempty,email"`
-	Status         OrderStatus `json:"status,omitempty" validate:"omitempty,oneof=pending confirmed delivered cancelled"`
-	PaymentStatus  PaymentStatus `json:"payment_status,omitempty" validate:"omitempty,oneof=pending paid failed"`
-	SpecialRequest string      `json:"special_request,omitempty"`
+	UserID         string             `json:"user_id,omitempty"`
+	CustomerName   string             `json:"customer_name" validate:"required,min=2,max=100"`
+	CustomerPhone  string             `json:"customer_phone" validate:"required"`
+	CustomerEmail  string             `json:"customer_email,omitempty" validate:"omitempty,email"`
+	Status         OrderStatus        `json:"status,omitempty" validate:"omitempty,oneof=pending confirmed delivered cancelled"`
+	PaymentStatus  PaymentStatus      `json:"payment_status,omitempty" validate:"omitempty,oneof=pending paid failed"`
+	SpecialRequest string             `json:"special_request,omitempty"`
 	Items          []OrderItemRequest `json:"items" validate:"required,min=1,dive"`
 }
 
@@ -135,10 +135,10 @@ type OrderItemRequest struct {
 
 // UpdateOrderRequest represents order update request payload
 type UpdateOrderRequest struct {
-	CustomerName   string       `json:"customer_name,omitempty" validate:"omitempty,min=2,max=100"`
-	CustomerPhone  string       `json:"customer_phone,omitempty"`
-	CustomerEmail  string       `json:"customer_email,omitempty" validate:"omitempty,email"`
-	Status         OrderStatus  `json:"status,omitempty" validate:"omitempty,oneof=pending confirmed delivered cancelled"`
+	CustomerName   string        `json:"customer_name,omitempty" validate:"omitempty,min=2,max=100"`
+	CustomerPhone  string        `json:"customer_phone,omitempty"`
+	CustomerEmail  string        `json:"customer_email,omitempty" validate:"omitempty,email"`
+	Status         OrderStatus   `json:"status,omitempty" validate:"omitempty,oneof=pending confirmed delivered cancelled"`
 	PaymentStatus  PaymentStatus `json:"payment_status,omitempty" validate:"omitempty,oneof=pending paid failed"`
-	SpecialRequest string       `json:"special_request,omitempty"`
+	SpecialRequest string        `json:"special_request,omitempty"`
 }

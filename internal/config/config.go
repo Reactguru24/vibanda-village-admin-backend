@@ -8,28 +8,28 @@ import (
 )
 
 type Config struct {
-	Port            string
-	GinMode         string
-	MongoURI        string
-	DatabaseName    string
-	JWTSecret       string
+	Port               string
+	GinMode            string
+	MongoURI           string
+	DatabaseName       string
+	JWTSecret          string
 	JWTExpirationHours int
-	AllowedOrigins  []string
-	MaxFileSize     string
-	UploadPath      string
+	AllowedOrigins     []string
+	MaxFileSize        string
+	UploadPath         string
 }
 
 func Load() *Config {
 	return &Config{
-		Port:            getEnv("PORT", "8080"),
-		GinMode:         getEnv("GIN_MODE", "debug"),
-		MongoURI:        getEnv("MONGODB_URI", "mongodb://localhost:27017"),
-		DatabaseName:    getEnv("DATABASE_NAME", "vibanda_village"),
-		JWTSecret:       getEnv("JWT_SECRET", "your-super-secret-jwt-key-here"),
+		Port:               getEnv("PORT", "8080"),
+		GinMode:            getEnv("GIN_MODE", "debug"),
+		MongoURI:           getEnv("MONGODB_URI", "mongodb://localhost:27017"),
+		DatabaseName:       getEnv("DATABASE_NAME", "vibanda_village"),
+		JWTSecret:          getEnv("JWT_SECRET", "your-super-secret-jwt-key-here"),
 		JWTExpirationHours: getEnvAsInt("JWT_EXPIRATION_HOURS", 24),
-		AllowedOrigins:  getEnvAsSlice("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173", "http://localhost:5174"}),
-		MaxFileSize:     getEnv("MAX_FILE_SIZE", "10MB"),
-		UploadPath:      getEnv("UPLOAD_PATH", "uploads/"),
+		AllowedOrigins:     getEnvAsSlice("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173", "http://localhost:5174"}),
+		MaxFileSize:        getEnv("MAX_FILE_SIZE", "10MB"),
+		UploadPath:         getEnv("UPLOAD_PATH", "uploads/"),
 	}
 }
 
